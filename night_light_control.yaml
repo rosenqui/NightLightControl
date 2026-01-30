@@ -61,14 +61,60 @@ blueprint:
       default: [0, 0, 255]
       selector:
         color_rgb:
-    nightlight_colour_door_open:
-      name: Nightlight Colours when a sensor is open
-      description: There should be as many entries in this list as there are sensors. If the first sensor is open, the first colour will be used, etc.
+    nightlight_colour_door_open_1:
+      name: Colour when sensor 1 is open
+      description: The colour to use if sensor 1 is open
       default: [255, 0, 0]
       selector:
-        entity:
-          multiple: true
-          color_rgb:
+        color_rgb:
+    nightlight_colour_door_open_2:
+      name: Colour when sensor 2 is open
+      description: The colour to use if sensor 1 is open
+      default: [0, 255, 255]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open_3:
+      name: Colour when sensor 3 is open
+      description: The colour to use if sensor 1 is open
+      default: [0, 255, 0]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open_4:
+      name: Colour when sensor 4 is open
+      description: The colour to use if sensor 1 is open
+      default: [255, 0, 0]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open_5:
+      name: Colour when sensor 5 is open
+      description: The colour to use if sensor 1 is open
+      default: [255, 0, 0]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open_6:
+      name: Colour when sensor 6 is open
+      description: The colour to use if sensor 1 is open
+      default: [255, 0, 0]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open_7:
+      name: Colour when sensor 7 is open
+      description: The colour to use if sensor 1 is open
+      default: [255, 0, 0]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open_8:
+      name: Colour when sensor 8 is open
+      description: The colour to use if sensor 1 is open
+      default: [255, 0, 0]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open_9:
+      name: Colour when sensor 9 is open
+      description: The colour to use if sensor 1 is open
+      default: [255, 0, 0]
+      selector:
+        color_rgb:
     nightlight_colour_motion:
       name: Nightlight Colour on Motion
       description: What colour should the light be when motion is detected?
