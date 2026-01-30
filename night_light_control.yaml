@@ -9,11 +9,11 @@ blueprint:
     sensor_opening:
       selector:
         entity:
+          multiple: true
           filter:
             domain: binary_sensor
             device_class: opening
-            multiple: true
-      name: Sensors
+      name: Door/Winodw/Gate Sensors
       description: One or more sensor entities (typically doors or windows) that report an open/closed state
     light_to_control:
       selector:
@@ -66,8 +66,9 @@ blueprint:
       description: There should be as many entries in this list as there are sensors. If the first sensor is open, the first colour will be used, etc.
       default: [255, 0, 0]
       selector:
-        color_rgb:
-        multiple: true
+        entity:
+          multiple: true
+          color_rgb:
     nightlight_colour_motion:
       name: Nightlight Colour on Motion
       description: What colour should the light be when motion is detected?
