@@ -151,7 +151,7 @@ actions:
           sequence:
             - variables:
                 brightness: 100
-                colour: !input nightlight_colour_door_open
+                colour: !input nightlight_colour_door_open_1
         - conditions:
             - condition: state
               entity_id: !input motion_entity
