@@ -1,0 +1,133 @@
+blueprint:
+  homeassistant:
+    min_version: 2024.10.0
+  name: Night Light Control
+  description: Control a night light based on various factors - motion, ambient light, garage door status, etc...
+  domain: automation
+  author: Eric Rosenquist
+  input:
+    car_door_sensor_opening:
+      selector:
+        entity:
+          filter:
+            domain: binary_sensor
+            device_class: opening
+      name: Car Door Sensor
+      description: The entity name of the sensor that reports the state of the garage car door
+    light_to_control:
+      selector:
+        entity:
+          filter:
+            domain: light
+      name: Light to Control
+      description: The entity name of the light to control
+    illuminance_entity:
+      selector:
+        entity:
+          filter:
+            domain: sensor
+            device_class: illuminance
+      name: Illuminance Sensor
+      description: The name of the entity providing the ambient light level
+    motion_entity:
+      selector:
+        entity:
+          filter:
+            domain: binary_sensor
+            device_class: motion
+      name: Motion Sensor
+      description: The entity name of the associated motion sensor
+    brightness_if_dark:
+      name: Light level when dark
+      description: What percentage of brightness should the light be when the area is dark?
+      default: 10
+      selector:
+        number:
+          min: 1
+          max: 100
+    darkness_threshold:
+      name: Darkness Threshold
+      description: Turn on the nightlight when the illuminance sensor reports light below this level.
+      default: 10
+      selector:
+        number:
+          min: 0
+          max: 100000
+          unit_of_measurement: lx
+    nightlight_colour:
+      name: Nightlight Colour
+      description: What colour should the light be when the area is dark?
+      default: [0, 0, 255]
+      selector:
+        color_rgb:
+    nightlight_colour_door_open:
+      name: Nightlight Colour if Car Door is Open
+      description: What colour should the light be when the car door is open?
+      default: [255, 0, 0]
+      selector:
+        color_rgb:
+    nightlight_colour_motion:
+      name: Nightlight Colour on Motion
+      description: What colour should the light be when motion is detected?
+      default: [255, 255, 255]
+      selector:
+        color_rgb:
+
+# If we trigger again while we're running, we restart the script to reevaluate
+mode: restart
+max_exceeded: silent
+
+triggers:
+  trigger: state
+  entity_id:
+    - !input car_door_sensor_opening
+    - !input illuminance_entity
+    - !input motion_entity
+
+actions:
+  sequence:
+    - alias: Set variables
+      variables:
+        brightness: 100
+        colour: !input nightlight_colour
+    - alias: >-
+        Set to full brightness if motion was detected or garage door is open, low
+        brightness at night, otherwise off
+      choose:
+        - conditions:
+            - condition: state
+              entity_id: !input car_door_sensor_opening
+              state: "on"
+              alias: Is the garage car door open?
+          sequence:
+            - variables:
+                brightness: 100
+                colour: !input nightlight_colour_door_open
+        - conditions:
+            - condition: state
+              entity_id: !input motion_entity
+              state: "on"
+              alias: Was motion detected?
+          sequence:
+            - variables:
+                brightness: 100
+                colour: !input nightlight_colour_motion
+        - conditions:
+            - condition: numeric_state
+              entity_id: !input illuminance_entity
+              below: !input darkness_threshold
+              alias: Set the brightness based on ambient light
+          sequence:
+            - variables:
+                brightness: !input brightness_if_dark
+      default:
+        - alias: Turn the light off if none of the other conditions match
+          variables:
+            brightness: 0
+    - action: light.turn_on
+      alias: Set the light brightness and colour
+      target:
+        entity_id: !input light_to_control
+      data:
+        brightness_pct: "{{ brightness }}"
+        rgb_color: "{{ colour }}"
