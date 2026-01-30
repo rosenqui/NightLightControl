@@ -1,7 +1,7 @@
 blueprint:
   homeassistant:
     min_version: 2024.10.0
-  name: Night Light Control v2026.01.30
+  name: Night Light Control v2026.01.30.1820
   description: Control a night light based on various factors - motion, ambient light, garage door status, etc...
   domain: automation
   author: Eric Rosenquist
@@ -12,9 +12,8 @@ blueprint:
           multiple: true
           filter:
             domain: binary_sensor
-            device_class: opening
-      name: Door/Winodw/Gate Sensors
-      description: One or more sensor entities (typically doors or windows) that report an open/closed state
+      name: Door/Window/Gate/etc. Sensors
+      description: One or more sensor entities (typically doors or windows) that report an open/closed state.
     light_to_control:
       selector:
         entity:
@@ -58,67 +57,43 @@ blueprint:
     nightlight_colour:
       name: Nightlight Colour
       description: What colour should the light be when the area is dark?
-      default: [0, 0, 255]
+      default: [0, 0, 255] # Blue
       selector:
         color_rgb:
     nightlight_colour_door_open_1:
       name: Colour when sensor 1 is open
-      description: The colour to use if sensor 1 is open
-      default: [255, 0, 0]
+      description: The colour to use if sensor 1 or 6+ is open
+      default: [255, 0, 0] # Red
       selector:
         color_rgb:
     nightlight_colour_door_open_2:
       name: Colour when sensor 2 is open
-      description: The colour to use if sensor 1 is open
-      default: [0, 255, 255]
+      description: The colour to use if sensor 2 is open
+      default: [255, 96, 208] # Pink
       selector:
         color_rgb:
     nightlight_colour_door_open_3:
       name: Colour when sensor 3 is open
-      description: The colour to use if sensor 1 is open
-      default: [0, 255, 0]
+      description: The colour to use if sensor 3 is open
+      default: [255, 160, 16] # Orange
       selector:
         color_rgb:
     nightlight_colour_door_open_4:
       name: Colour when sensor 4 is open
-      description: The colour to use if sensor 1 is open
-      default: [255, 0, 0]
+      description: The colour to use if sensor 4 is open
+      default: [255, 224, 32] # Yellow
       selector:
         color_rgb:
     nightlight_colour_door_open_5:
       name: Colour when sensor 5 is open
-      description: The colour to use if sensor 1 is open
-      default: [255, 0, 0]
-      selector:
-        color_rgb:
-    nightlight_colour_door_open_6:
-      name: Colour when sensor 6 is open
-      description: The colour to use if sensor 1 is open
-      default: [255, 0, 0]
-      selector:
-        color_rgb:
-    nightlight_colour_door_open_7:
-      name: Colour when sensor 7 is open
-      description: The colour to use if sensor 1 is open
-      default: [255, 0, 0]
-      selector:
-        color_rgb:
-    nightlight_colour_door_open_8:
-      name: Colour when sensor 8 is open
-      description: The colour to use if sensor 1 is open
-      default: [255, 0, 0]
-      selector:
-        color_rgb:
-    nightlight_colour_door_open_9:
-      name: Colour when sensor 9 is open
-      description: The colour to use if sensor 1 is open
-      default: [255, 0, 0]
+      description: The colour to use if sensor 5 is open
+      default: [0, 192, 0] # Green
       selector:
         color_rgb:
     nightlight_colour_motion:
       name: Nightlight Colour on Motion
       description: What colour should the light be when motion is detected?
-      default: [255, 255, 255]
+      default: [255, 255, 255] # White
       selector:
         color_rgb:
 
@@ -127,11 +102,12 @@ mode: restart
 max_exceeded: silent
 
 triggers:
-  trigger: state
-  entity_id:
-    - !input sensor_opening
-    - !input illuminance_entity
-    - !input motion_entity
+  - trigger: state
+    entity_id:
+      - !input illuminance_entity
+      - !input motion_entity
+  - trigger: state
+    entity_id: !input sensor_opening
 
 actions:
   sequence:
@@ -139,6 +115,13 @@ actions:
       variables:
         brightness: 100
         colour: !input nightlight_colour
+        sensor_opening: !input sensor_opening
+        door_open_colours:
+          - !input nightlight_colour_door_open_1
+          - !input nightlight_colour_door_open_2
+          - !input nightlight_colour_door_open_3
+          - !input nightlight_colour_door_open_4
+          - !input nightlight_colour_door_open_5
     - alias: >-
         Set to full brightness if motion was detected or garage door is open, low
         brightness at night, otherwise off
@@ -147,11 +130,21 @@ actions:
             - condition: state
               entity_id: !input sensor_opening
               state: "on"
-              alias: Is the door or window open?
+              match: any
+              alias: Is the door/window/gate/etc open?
           sequence:
             - variables:
                 brightness: 100
-                colour: !input nightlight_colour_door_open_1
+                colour: >
+                  {# Default to first colour if not found #}
+                  {% set ns = namespace(found_index = 0) %}
+                  {% for sensor in sensor_opening %}
+                    {% if is_state(sensor, 'on') %}
+                      {% set ns.found_index = loop.index0 %}
+                      {% break %}
+                    {% endif %}
+                  {% endfor %}
+                  {{ door_open_colours[ns.found_index if ns.found_index < 5 else 0] }}
         - conditions:
             - condition: state
               entity_id: !input motion_entity
